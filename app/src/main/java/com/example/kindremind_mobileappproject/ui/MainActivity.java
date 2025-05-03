@@ -6,7 +6,8 @@ import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.view.MenuItem;
-import android.view.View;  // Added import for View
+import android.view.MotionEvent;
+import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -47,6 +48,11 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     // Vibrator service
     private Vibrator vibrator;
 
+    // For tracking touch move events for manual swipe animation
+    private float dX = 0f;
+    private static final float SWIPE_THRESHOLD = 0.25f; // Percentage of screen width
+    private static final float ROTATION_FACTOR = 0.1f;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -85,13 +91,59 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void setupSwipeDetection() {
-        SwipeGestureDetector swipeDetector = new SwipeGestureDetector(this, this);
-        deedCard.setOnTouchListener(swipeDetector);
+        // Enhanced manual swipe detection for smoother animations
+        deedCard.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                float screenWidth = getResources().getDisplayMetrics().widthPixels;
+
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        dX = v.getX() - event.getRawX();
+                        return true;
+
+                    case MotionEvent.ACTION_MOVE:
+                        float newX = event.getRawX() + dX;
+                        float displacement = newX - v.getLeft();
+
+                        // Move the card
+                        v.setTranslationX(displacement);
+
+                        // Rotate slightly based on displacement
+                        v.setRotation(displacement * ROTATION_FACTOR);
+                        return true;
+
+                    case MotionEvent.ACTION_UP:
+                        float translationX = v.getTranslationX();
+                        float threshold = screenWidth * SWIPE_THRESHOLD;
+
+                        if (translationX > threshold) {
+                            // Swipe right - complete deed
+                            AnimationUtils.animateSwipeRight(v, () -> completeDeed());
+                        } else if (translationX < -threshold) {
+                            // Swipe left - skip deed
+                            AnimationUtils.animateSwipeLeft(v, () -> skipDeed());
+                        } else {
+                            // Return to original position
+                            AnimationUtils.animateCardReturn(v, translationX);
+                        }
+                        return true;
+                }
+                return false;
+            }
+        });
     }
 
     private void setupClickListeners() {
-        btnComplete.setOnClickListener(v -> completeDeed());
-        btnSkip.setOnClickListener(v -> skipDeed());
+        btnComplete.setOnClickListener(v -> {
+            // Animate the card on button press
+            AnimationUtils.animateSwipeRight(deedCard, () -> completeDeed());
+        });
+
+        btnSkip.setOnClickListener(v -> {
+            // Animate the card on button press
+            AnimationUtils.animateSwipeLeft(deedCard, () -> skipDeed());
+        });
     }
 
     private void setupBottomNavigation() {
@@ -134,6 +186,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         if (currentDeed != null) {
             deedText.setText(currentDeed.getText());
             categoryIcon.setImageResource(currentDeed.getCategoryIconResourceId());
+
+            // Animate the new card
+            AnimationUtils.animateNewCard(deedCard);
         }
     }
 
@@ -142,13 +197,12 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         vibrateForCompletion();
 
         // Make sure coin is visible and reset its properties before animation
-        coinAnimation.setAlpha(1.0f);  // Make fully opaque
-        coinAnimation.setVisibility(View.VISIBLE);  // Ensure visibility
+        coinAnimation.setAlpha(1.0f);
+        coinAnimation.setVisibility(View.VISIBLE);
 
-        // Show coin animation
+        // Show enhanced coin animation
         AnimationUtils.playCoinAnimation(coinAnimation, () -> {
-            // You can add additional code here that runs after the animation completes
-            // For example, load the next deed
+            // Load the next deed after animation completes
             loadNextDeed();
         });
 
@@ -159,11 +213,26 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         Toast.makeText(this, R.string.deed_completed, Toast.LENGTH_SHORT).show();
     }
 
-    // Method to load the next deed after completion
     private void loadNextDeed() {
-        // In a real implementation, this would get the next deed from your repository
-        // For now, we'll just reload the same deed
-        loadTodaysDeed();
+        // In a real implementation, this would get the next deed from  repository
+        // For now, we'll simulate loading a different deed
+        int nextId = currentDeed.getId() + 1;
+        String[] categories = {"environment", "empathy", "community", "health"};
+        String[] deedTexts = {
+                "Pick up litter in your local park.",
+                "Compliment a stranger today.",
+                "Offer to help an elderly neighbor with groceries.",
+                "Try a new healthy recipe for dinner."
+        };
+
+        // Cycle through available categories and texts
+        int categoryIndex = nextId % categories.length;
+        int textIndex = nextId % deedTexts.length;
+
+        currentDeed = new Deed(nextId, categories[categoryIndex], deedTexts[textIndex]);
+
+        // Update UI with the deed details
+        updateDeedUI();
     }
 
     private void skipDeed() {
@@ -179,6 +248,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         } else {
             // No more skips available
             Toast.makeText(this, R.string.max_skips_reached, Toast.LENGTH_SHORT).show();
+
+            // Return card to original position
+            AnimationUtils.animateCardReturn(deedCard, deedCard.getTranslationX());
         }
     }
 

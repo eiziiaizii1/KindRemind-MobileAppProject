@@ -97,15 +97,16 @@
     <!-- Coin Animation View (Initially invisible) -->
     <ImageView
         android:id="@+id/coin_animation"
-        android:layout_width="64dp"
-        android:layout_height="64dp"
+        android:layout_width="100dp"
+        android:layout_height="100dp"
+        android:elevation="16dp"
+        android:contentDescription="@string/coin_animation_description"
         android:src="@drawable/ic_coin"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:contentDescription="@string/coin_animation_description" />
+        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Bottom Navigation -->
     <com.google.android.material.bottomnavigation.BottomNavigationView

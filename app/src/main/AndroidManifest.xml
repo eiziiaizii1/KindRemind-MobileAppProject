@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <uses-permission android:name="android.permission.VIBRATE" />
     <application
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
@@ -26,8 +27,23 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">
-
         </activity>
+
+        <!-- Deck of deeds -->
+        <activity
+            android:name=".ui.DeckActivity"
+            android:exported="false" />
+
+        <!-- History / completed deeds -->
+        <activity
+            android:name=".ui.HistoryActivity"
+            android:exported="false" />
+
+        <!-- Add-deed form -->
+        <activity
+            android:name=".ui.AddDeedActivity"
+            android:exported="false" />
+
     </application>
 
 </manifest>

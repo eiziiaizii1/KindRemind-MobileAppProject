@@ -1,3 +1,29 @@
 <resources>
-    <string name="app_name">KindRemind-MobileAppProject</string>
+    <!-- MainActivity Strings -->
+    <string name="app_name">KindRemind</string>
+    <string name="category_icon_description">Deed category icon</string>
+    <string name="swipe_instruction">Swipe right to complete or left to skip</string>
+    <string name="complete_deed">Done</string>
+    <string name="skip_deed">Skip</string>
+    <string name="coin_animation_description">Coin reward animation</string>
+
+    <!-- Menu Strings -->
+    <string name="menu_home">Today</string>
+    <string name="menu_history">History</string>
+    <string name="menu_deck">Surprise</string>
+
+    <!-- Toast Messages -->
+    <string name="deed_completed">Deed completed! +10 coins</string>
+    <string name="deed_skipped">Deed skipped.</string>
+    <string name="max_skips_reached">Maximum skips reached for today.</string>
+
+    <!-- DeckActivity Strings -->
+    <string name="select_category">Select Category</string>
+    <string name="add_deed">Add Custom Deed</string>
+
+    <!-- Settings Strings -->
+    <string name="settings_title">Settings</string>
+    <string name="notification_time">Notification Time</string>
+    <string name="dark_theme">Dark Theme</string>
+    <string name="vibration">Vibration Feedback</string>
 </resources>

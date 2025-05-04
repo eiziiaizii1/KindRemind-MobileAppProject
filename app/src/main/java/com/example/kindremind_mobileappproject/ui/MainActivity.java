@@ -2,6 +2,7 @@ package com.example.kindremind_mobileappproject.ui;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -18,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.example.kindremind_mobileappproject.R;
+import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
 import com.example.kindremind_mobileappproject.ui.utils.AnimationUtils;
@@ -27,6 +29,7 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements SwipeGestureDetector.OnSwipeListener {
 
@@ -42,6 +45,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     // Current deed
     private Deed currentDeed;
 
+    // Data manager for deeds
+    private DeedDataManager dataManager;
+
     // Skips counter
     private int skipsRemaining = 3;
 
@@ -53,10 +59,24 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     private static final float SWIPE_THRESHOLD = 0.25f; // Percentage of screen width
     private static final float ROTATION_FACTOR = 0.1f;
 
+    // Key for storing current deed ID in saved instance state
+    private static final String KEY_CURRENT_DEED_ID = "current_deed_id";
+
+    // SharedPreferences for persisting deed ID between activity navigations
+    private static final String PREFS_NAME = "KindRemindPrefs";
+    private static final String PREF_CURRENT_DEED_ID = "current_deed_id";
+    private SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        // Initialize data manager
+        dataManager = DeedDataManager.getInstance();
+
+        // Initialize SharedPreferences
+        sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
 
         // Initialize UI components
         initViews();
@@ -70,14 +90,45 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         // Set up bottom navigation
         setupBottomNavigation();
 
-        // Load today's deed
-        loadTodaysDeed();
+        // Load today's deed - check if we have a saved deed ID first (from instance state)
+        if (savedInstanceState != null && savedInstanceState.containsKey(KEY_CURRENT_DEED_ID)) {
+            int savedDeedId = savedInstanceState.getInt(KEY_CURRENT_DEED_ID);
+            loadSpecificDeed(savedDeedId);
+        } else {
+            // Check if we have a saved deed ID in SharedPreferences (for navigation returns)
+            int savedDeedId = sharedPreferences.getInt(PREF_CURRENT_DEED_ID, -1);
+            if (savedDeedId != -1) {
+                loadSpecificDeed(savedDeedId);
+            } else {
+                loadTodaysDeed();
+            }
+        }
 
         // Get vibrator service
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         // Make sure coin animation is initially invisible
         coinAnimation.setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // Save the current deed ID so we can restore it later
+        if (currentDeed != null) {
+            outState.putInt(KEY_CURRENT_DEED_ID, currentDeed.getId());
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // Save the current deed ID to SharedPreferences when leaving the activity
+        if (currentDeed != null) {
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putInt(PREF_CURRENT_DEED_ID, currentDeed.getId());
+            editor.apply();
+        }
     }
 
     private void initViews() {
@@ -174,18 +225,82 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void loadTodaysDeed() {
-        // For now, create a temporary deed
-        // In a real implementation, this would come from your repository
-        currentDeed = new Deed(1, "environment", "Unplug one idle device to save energy.");
+        // Get a valid deed ID from the data manager
+        Deed deed = getRandomDeedFromDataManager();
+        if (deed != null) {
+            currentDeed = deed;
+        } else {
+            // Fallback to a default deed if something went wrong
+            currentDeed = new Deed(1, "environment", "Unplug one idle device to save energy.");
+        }
 
         // Update UI with the deed details
         updateDeedUI();
     }
 
+    /**
+     * Load a specific deed by ID
+     * @param deedId The ID of the deed to load
+     */
+    private void loadSpecificDeed(int deedId) {
+        Deed deed = dataManager.getDeedById(deedId);
+        if (deed != null) {
+            currentDeed = deed;
+            updateDeedUI();
+        } else {
+            // If the deed with the specified ID cannot be found, fall back to a random deed
+            loadTodaysDeed();
+        }
+    }
+
+    /**
+     * Get a random deed from the DeedDataManager
+     */
+    private Deed getRandomDeedFromDataManager() {
+        // In a real implementation, you might want to get a deed based on some criteria
+        // For now, we'll get a random deed from the data manager's map
+        if (dataManager != null) {
+            // Get a random deed ID between 1 and 16 (based on your current setup)
+            Random random = new Random();
+            int randomDeedId = random.nextInt(16) + 1;
+
+            // Try to get the deed with that ID
+            Deed deed = dataManager.getDeedById(randomDeedId);
+
+            // If we got a valid deed, return it
+            if (deed != null) {
+                return deed;
+            }
+        }
+
+        // If we couldn't get a valid deed, return null and let the caller handle it
+        return null;
+    }
+
     private void updateDeedUI() {
         if (currentDeed != null) {
             deedText.setText(currentDeed.getText());
-            categoryIcon.setImageResource(currentDeed.getCategoryIconResourceId());
+
+            // Set the category icon based on the deed's category
+            int iconResId = R.drawable.ic_category_default; // Default icon
+
+            // You can enhance this to use specific icons based on category
+            switch (currentDeed.getCat().toLowerCase()) {
+                case "environment":
+                    iconResId = R.drawable.ic_category_default; // Replace with actual environment icon
+                    break;
+                case "empathy":
+                    iconResId = R.drawable.ic_category_default; // Replace with actual empathy icon
+                    break;
+                case "community":
+                    iconResId = R.drawable.ic_category_default; // Replace with actual community icon
+                    break;
+                case "health":
+                    iconResId = R.drawable.ic_category_default; // Replace with actual health icon
+                    break;
+            }
+
+            categoryIcon.setImageResource(iconResId);
 
             // Animate the new card
             AnimationUtils.animateNewCard(deedCard);
@@ -214,25 +329,36 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void loadNextDeed() {
-        // In a real implementation, this would get the next deed from  repository
-        // For now, we'll simulate loading a different deed
-        int nextId = currentDeed.getId() + 1;
-        String[] categories = {"environment", "empathy", "community", "health"};
-        String[] deedTexts = {
-                "Pick up litter in your local park.",
-                "Compliment a stranger today.",
-                "Offer to help an elderly neighbor with groceries.",
-                "Try a new healthy recipe for dinner."
-        };
+        // Get another random deed from the data manager
+        Deed nextDeed = getRandomDeedFromDataManager();
 
-        // Cycle through available categories and texts
-        int categoryIndex = nextId % categories.length;
-        int textIndex = nextId % deedTexts.length;
+        if (nextDeed != null) {
+            currentDeed = nextDeed;
+        } else {
+            // Fallback to cycling through some hardcoded deeds if data manager fails
+            int nextId = currentDeed.getId() + 1;
+            String[] categories = {"environment", "empathy", "community", "health"};
+            String[] deedTexts = {
+                    "Pick up litter in your local park.",
+                    "Compliment a stranger today.",
+                    "Offer to help an elderly neighbor with groceries.",
+                    "Try a new healthy recipe for dinner."
+            };
 
-        currentDeed = new Deed(nextId, categories[categoryIndex], deedTexts[textIndex]);
+            // Cycle through available categories and texts
+            int categoryIndex = nextId % categories.length;
+            int textIndex = nextId % deedTexts.length;
+
+            currentDeed = new Deed(nextId, categories[categoryIndex], deedTexts[textIndex]);
+        }
 
         // Update UI with the deed details
         updateDeedUI();
+
+        // Save the new deed ID to SharedPreferences
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(PREF_CURRENT_DEED_ID, currentDeed.getId());
+        editor.apply();
     }
 
     private void skipDeed() {
@@ -259,17 +385,19 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         String currentDate = dateFormat.format(new Date());
 
-        // Create a completed deed object
+        // Create a completed deed object using the current deed's ID
         CompletedDeed completedDeed = new CompletedDeed(
-                currentDeed.getId(),
-                false,  // Not a custom deed
+                currentDeed.getId(),  // Use the current deed's ID which exists in the DeedDataManager
+                false,                // Not a custom deed
                 currentDate,
-                null    // No note for now
+                null                  // No note for now
         );
 
-        // TODO: Save to database via repository
-        // In a real implementation, this would be:
-        // deedRepository.saveDeedCompletion(completedDeed);
+        // Generate a primary key (this would be handled by Room in the database implementation)
+        completedDeed.setPk(dataManager.getCompletedDeedsWithDetails().size() + 1);
+
+        // Save to our data manager
+        dataManager.saveCompletedDeed(completedDeed);
     }
 
     private void vibrateForCompletion() {

@@ -1,5 +1,8 @@
 package com.example.kindremind_mobileappproject.data;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
 import com.example.kindremind_mobileappproject.ui.adapters.CompletedDeedWithDetails;
@@ -17,6 +20,7 @@ public class DeedDataManager {
 
     // Singleton instance
     private static DeedDataManager instance;
+    private DeedApiManager apiManager;
 
     // In-memory storage for deeds
     private final Map<Integer, Deed> deedMap;
@@ -24,14 +28,17 @@ public class DeedDataManager {
 
     // Sample deed texts by category for resolving deed details
     private final Map<String, List<String>> deedTextsByCategory;
+    private Runnable readyCallback;
 
     private DeedDataManager() {
         deedMap = new HashMap<>();
         completedDeeds = new ArrayList<>();
         deedTextsByCategory = new HashMap<>();
+        apiManager = DeedApiManager.getInstance();
 
         // Initialize with some default deeds
-        initializeDefaultDeeds();
+        //initializeDefaultDeeds();
+        initializeDeedsFromApi();
     }
 
     public static synchronized DeedDataManager getInstance() {
@@ -41,7 +48,7 @@ public class DeedDataManager {
         return instance;
     }
 
-    private void initializeDefaultDeeds() {
+   /* private void initializeDefaultDeeds() {
         // Add sample deeds by category
         List<String> environmentDeeds = new ArrayList<>();
         environmentDeeds.add("Unplug one idle device to save energy.");
@@ -73,6 +80,36 @@ public class DeedDataManager {
 
         // Add some deeds to the deed map
         addSampleDeedsToMap();
+    }*/
+
+    private void initializeDeedsFromApi() {
+        apiManager.getAllDeedsFromJSON("https://run.mocky.io/v3/8c0c776d-6dfe-432f-a69f-a56c36501e00/", allDeeds -> {
+            List<String> environmentDeeds = new ArrayList<>();
+            List<String> empathyDeeds = new ArrayList<>();
+            List<String> communityDeeds = new ArrayList<>();
+            List<String> healthDeeds = new ArrayList<>();
+
+            for (String text : allDeeds.keySet()) {
+                String category = allDeeds.get(text);
+                switch (category) {
+                    case "environment": environmentDeeds.add(text); break;
+                    case "empathy": empathyDeeds.add(text); break;
+                    case "community": communityDeeds.add(text); break;
+                    case "health": healthDeeds.add(text); break;
+                }
+            }
+
+            if (!environmentDeeds.isEmpty()) deedTextsByCategory.put("environment", environmentDeeds);
+            if (!empathyDeeds.isEmpty()) deedTextsByCategory.put("empathy", empathyDeeds);
+            if (!communityDeeds.isEmpty()) deedTextsByCategory.put("community", communityDeeds);
+            if (!healthDeeds.isEmpty()) deedTextsByCategory.put("health", healthDeeds);
+
+            addSampleDeedsToMap();
+
+            //  tell MainActivity the data exists
+            if (readyCallback != null)  new Handler(Looper.getMainLooper()).post(readyCallback);
+
+        });
     }
 
     private void addSampleDeedsToMap() {
@@ -154,5 +191,17 @@ public class DeedDataManager {
      */
     public Deed getDeedById(int id) {
         return deedMap.get(id);
+    }
+
+    public int getDeedCount(){
+        return deedMap.size();
+    }
+
+    public void whenReady(Runnable r) {
+        if (!deedMap.isEmpty()) {          // data already fetched
+            r.run();
+        } else {
+            readyCallback = r;             // remember it for later
+        }
     }
 }

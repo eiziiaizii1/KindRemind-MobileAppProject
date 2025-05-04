@@ -19,6 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.example.kindremind_mobileappproject.R;
+import com.example.kindremind_mobileappproject.data.DeedApiManager;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
@@ -72,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize data manager
+        // Initialize data and manager
         dataManager = DeedDataManager.getInstance();
 
         // Initialize SharedPreferences
@@ -90,20 +91,29 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         // Set up bottom navigation
         setupBottomNavigation();
 
-        // Load today's deed - check if we have a saved deed ID first (from instance state)
+        // wait until api call ends
+        dataManager.whenReady(() -> {
+            Toast.makeText(MainActivity.this,"1",Toast.LENGTH_SHORT).show();
+                // Load today's deed - check if we have a saved deed ID first (from instance state)
         if (savedInstanceState != null && savedInstanceState.containsKey(KEY_CURRENT_DEED_ID)) {
             int savedDeedId = savedInstanceState.getInt(KEY_CURRENT_DEED_ID);
+            Toast.makeText(MainActivity.this,"1.1.1",Toast.LENGTH_SHORT).show();
             loadSpecificDeed(savedDeedId);
+            Toast.makeText(MainActivity.this,"1.1.2",Toast.LENGTH_SHORT).show();
         } else {
             // Check if we have a saved deed ID in SharedPreferences (for navigation returns)
             int savedDeedId = sharedPreferences.getInt(PREF_CURRENT_DEED_ID, -1);
             if (savedDeedId != -1) {
+                Toast.makeText(MainActivity.this,"1.2.1",Toast.LENGTH_SHORT).show();
                 loadSpecificDeed(savedDeedId);
+                Toast.makeText(MainActivity.this,"1.2.2",Toast.LENGTH_SHORT).show();
             } else {
                 loadTodaysDeed();
+                Toast.makeText(MainActivity.this,"1.3",Toast.LENGTH_SHORT).show();
             }
         }
-
+            Toast.makeText(MainActivity.this,"2",Toast.LENGTH_SHORT).show();
+    });
         // Get vibrator service
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -262,7 +272,7 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         if (dataManager != null) {
             // Get a random deed ID between 1 and 16 (based on your current setup)
             Random random = new Random();
-            int randomDeedId = random.nextInt(16) + 1;
+            int randomDeedId = random.nextInt(dataManager.getDeedCount()) + 1;
 
             // Try to get the deed with that ID
             Deed deed = dataManager.getDeedById(randomDeedId);

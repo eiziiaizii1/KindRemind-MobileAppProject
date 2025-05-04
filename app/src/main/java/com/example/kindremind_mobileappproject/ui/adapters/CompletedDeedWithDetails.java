@@ -1,5 +1,7 @@
 package com.example.kindremind_mobileappproject.ui.adapters;
 
+import com.example.kindremind_mobileappproject.R;
+
 /**
  * Helper class that combines CompletedDeed with associated Deed information
  * for display in the history list
@@ -52,13 +54,13 @@ public class CompletedDeedWithDetails {
     public int getCategoryIconResourceId() {
         switch (category.toLowerCase()) {
             case "environment":
-                return com.example.kindremind_mobileappproject.R.drawable.ic_category_default; // Replace with actual icon
+                return R.drawable.ic_category_environment; // Replace with actual icon
             case "empathy":
-                return com.example.kindremind_mobileappproject.R.drawable.ic_category_default; // Replace with actual icon
+                return R.drawable.ic_category_empathy; // Replace with actual icon
             case "community":
-                return com.example.kindremind_mobileappproject.R.drawable.ic_category_default; // Replace with actual icon
+                return R.drawable.ic_category_community; // Replace with actual icon
             case "health":
-                return com.example.kindremind_mobileappproject.R.drawable.ic_category_default; // Replace with actual icon
+                return R.drawable.ic_category_health; // Replace with actual icon
             default:
                 return com.example.kindremind_mobileappproject.R.drawable.ic_category_default;
         }

@@ -287,16 +287,16 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
             // You can enhance this to use specific icons based on category
             switch (currentDeed.getCat().toLowerCase()) {
                 case "environment":
-                    iconResId = R.drawable.ic_category_default; // Replace with actual environment icon
+                    iconResId = R.drawable.ic_category_environment; // Replace with actual environment icon
                     break;
                 case "empathy":
-                    iconResId = R.drawable.ic_category_default; // Replace with actual empathy icon
+                    iconResId = R.drawable.ic_category_empathy; // Replace with actual empathy icon
                     break;
                 case "community":
-                    iconResId = R.drawable.ic_category_default; // Replace with actual community icon
+                    iconResId = R.drawable.ic_category_community; // Replace with actual community icon
                     break;
                 case "health":
-                    iconResId = R.drawable.ic_category_default; // Replace with actual health icon
+                    iconResId = R.drawable.ic_category_health; // Replace with actual health icon
                     break;
             }
 

@@ -17,6 +17,7 @@ import com.example.kindremind_mobileappproject.model.Deed;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -92,6 +93,11 @@ public class HistoryAdapter extends ArrayAdapter<CompletedDeedWithDetails> {
             // If parsing fails, return the original string
             return dateStr;
         }
+    }
+
+    public void clear() {
+        // Create a new empty list
+        this.completedDeeds = new ArrayList<>();
     }
 
     /**

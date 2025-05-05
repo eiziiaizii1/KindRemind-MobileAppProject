@@ -4,8 +4,10 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,6 +19,7 @@ import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 import com.example.kindremind_mobileappproject.ui.adapters.HistoryAdapter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -27,6 +30,7 @@ public class HistoryActivity extends AppCompatActivity {
     private BottomNavigationView bottomNavigation;
     private ListView historyListView;
     private TextView emptyStateText;
+    private Button btnClearHistory;
     private HistoryAdapter adapter;
     private DeedDataManager dataManager;
 
@@ -38,18 +42,19 @@ public class HistoryActivity extends AppCompatActivity {
         // Initialize data manager
         dataManager = DeedDataManager.getInstance(this);
 
-        // Add sample data for testing (remove this in production)
-        //dataManager.addSampleCompletedDeeds();
-
         // Find views
         bottomNavigation = findViewById(R.id.bottom_navigation);
         historyListView = findViewById(R.id.history_list);
+        btnClearHistory = findViewById(R.id.btn_clear_history);
 
         // Check if there's an emptyStateText view in the layout
         emptyStateText = findViewById(R.id.empty_state_text);
 
         // Set up bottom navigation
         setupBottomNavigation();
+
+        // Set up clear button click listener
+        setupClearButton();
 
         // Load and display completed deeds
         loadCompletedDeeds();
@@ -90,6 +95,38 @@ public class HistoryActivity extends AppCompatActivity {
 
         // Set History as selected
         bottomNavigation.setSelectedItemId(R.id.nav_history);
+    }
+
+    /**
+     * Set up the clear button click listener
+     */
+    private void setupClearButton() {
+        btnClearHistory.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                clearHistoryList();
+            }
+        });
+    }
+
+    /**
+     * Clear the history list view (visual only)
+     */
+    private void clearHistoryList() {
+        // Clear the adapter's data without affecting the database
+        if (adapter != null) {
+            adapter.clear();
+            adapter.notifyDataSetChanged();
+
+            // Show the empty state text
+            if (emptyStateText != null) {
+                emptyStateText.setVisibility(View.VISIBLE);
+                historyListView.setVisibility(View.GONE);
+            }
+
+            // Show a toast message
+            Toast.makeText(this, "History cleared", Toast.LENGTH_SHORT).show();
+        }
     }
 
     /**

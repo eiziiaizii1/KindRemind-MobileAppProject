@@ -3,6 +3,7 @@ package com.example.kindremind_mobileappproject.ui;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -267,7 +268,7 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     /**
      * Get a random deed from the DeedDataManager
      */
-    private Deed getRandomDeedFromDataManager() {
+    /*private Deed getRandomDeedFromDataManager() {
         // In a real implementation, you might want to get a deed based on some criteria
         // For now, we'll get a random deed from the data manager's map
         if (dataManager != null) {
@@ -286,6 +287,46 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
         // If we couldn't get a valid deed, return null and let the caller handle it
         return null;
+    } */
+
+    private Deed getRandomDeedFromDataManager(){
+        if (dataManager != null) {
+            // Get a random deed ID between 1 and 16 (based on your current setup)
+            Random random = new Random();
+            int randomDeedId = random.nextInt(dataManager.getDeedCount()) + 1;
+
+            while (isDeedComplete(randomDeedId)){
+                randomDeedId = random.nextInt(dataManager.getDeedCount()) + 1;
+            }
+
+            // Try to get the deed with that ID
+            Deed deed = dataManager.getDeedById(randomDeedId);
+
+            // If we got a valid deed, return it
+            if (deed != null) {
+                return deed;
+            }
+        }
+
+        // If we couldn't get a valid deed, return null and let the caller handle it
+        return null;
+    }
+
+    // checks if the deed with the specified id was already completed
+    private boolean isDeedComplete(int deedId){
+        boolean isComplete = false;
+
+        Cursor c = dbAdapter.getAllCompletedDeeds();
+        int completedDeedCount = c.getCount();
+
+        for (int i = 0;i<completedDeedCount;i++){
+            if (c.getInt(1) == deedId){
+                isComplete = true;
+                break;
+            }
+        }
+
+        return isComplete;
     }
 
     private void updateDeedUI() {

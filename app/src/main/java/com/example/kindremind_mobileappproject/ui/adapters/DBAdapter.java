@@ -129,4 +129,9 @@ public class DBAdapter {
         return mCursor;
     }
 
+    // Deletes all rows from the completed_deeds table
+    public void deleteDeeds() {
+        db.delete(DATABASE_TABLE, null, null);
+    }
+
 }

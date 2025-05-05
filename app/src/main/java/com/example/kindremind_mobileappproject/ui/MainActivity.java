@@ -19,9 +19,11 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.example.kindremind_mobileappproject.R;
+import com.example.kindremind_mobileappproject.data.DeedApiManager;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
+import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 import com.example.kindremind_mobileappproject.ui.utils.AnimationUtils;
 import com.example.kindremind_mobileappproject.ui.utils.SwipeGestureDetector;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -66,14 +68,18 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     private static final String PREFS_NAME = "KindRemindPrefs";
     private static final String PREF_CURRENT_DEED_ID = "current_deed_id";
     private SharedPreferences sharedPreferences;
+    private DBAdapter dbAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize and open the database
+        dbAdapter = DBAdapter.getInstance(this);
+
         // Initialize data manager
-        dataManager = DeedDataManager.getInstance();
+        dataManager = DeedDataManager.getInstance(this);
 
         // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -90,7 +96,10 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         // Set up bottom navigation
         setupBottomNavigation();
 
-        // Load today's deed - check if we have a saved deed ID first (from instance state)
+        // wait until api call ends
+        dataManager.whenReady(() -> {
+
+                // Load today's deed - check if we have a saved deed ID first (from instance state)
         if (savedInstanceState != null && savedInstanceState.containsKey(KEY_CURRENT_DEED_ID)) {
             int savedDeedId = savedInstanceState.getInt(KEY_CURRENT_DEED_ID);
             loadSpecificDeed(savedDeedId);
@@ -104,11 +113,13 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
             }
         }
 
+    });
         // Get vibrator service
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         // Make sure coin animation is initially invisible
         coinAnimation.setVisibility(View.INVISIBLE);
+
     }
 
     @Override
@@ -262,7 +273,7 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         if (dataManager != null) {
             // Get a random deed ID between 1 and 16 (based on your current setup)
             Random random = new Random();
-            int randomDeedId = random.nextInt(16) + 1;
+            int randomDeedId = random.nextInt(dataManager.getDeedCount()) + 1;
 
             // Try to get the deed with that ID
             Deed deed = dataManager.getDeedById(randomDeedId);
@@ -394,9 +405,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         );
 
         // Generate a primary key (this would be handled by Room in the database implementation)
-        completedDeed.setPk(dataManager.getCompletedDeedsWithDetails().size() + 1);
+        //completedDeed.setPk(dataManager.getCompletedDeedsWithDetails().size() + 1); // idk what this is
 
-        // Save to our data manager
+        // Save to our database
         dataManager.saveCompletedDeed(completedDeed);
     }
 

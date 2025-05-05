@@ -10,14 +10,14 @@
     <!-- Menu Strings -->
     <string name="menu_home">Today</string>
     <string name="menu_history">History</string>
-    <string name="menu_deck">Surprise</string>
+    <string name="menu_deck">Settings</string>
 
     <!-- Toast Messages -->
     <string name="deed_completed">Deed completed! +10 coins</string>
     <string name="deed_skipped">Deed skipped.</string>
     <string name="max_skips_reached">Maximum skips reached for today.</string>
 
-    <!-- DeckActivity Strings -->
+    <!-- SettingsActivity Strings -->
     <string name="select_category">Select Category</string>
     <string name="add_deed">Add Custom Deed</string>
 

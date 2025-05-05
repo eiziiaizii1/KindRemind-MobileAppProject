@@ -10,6 +10,6 @@
         android:title="@string/menu_history" />
     <item
         android:id="@+id/nav_deck"
-        android:icon="@drawable/ic_deck"
+        android:icon="@drawable/ic_settings"
         android:title="@string/menu_deck" />
 </menu>

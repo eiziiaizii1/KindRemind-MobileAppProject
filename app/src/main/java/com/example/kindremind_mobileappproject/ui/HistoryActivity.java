@@ -15,11 +15,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.kindremind_mobileappproject.R;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.ui.adapters.CompletedDeedWithDetails;
-import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 import com.example.kindremind_mobileappproject.ui.adapters.HistoryAdapter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -85,7 +83,7 @@ public class HistoryActivity extends AppCompatActivity {
                     return true;
                 } else if (itemId == R.id.nav_deck) {
                     // Navigate to deck activity
-                    startActivity(new Intent(HistoryActivity.this, DeckActivity.class));
+                    startActivity(new Intent(HistoryActivity.this, SettingsActivity.class));
                     return true;
                 }
 

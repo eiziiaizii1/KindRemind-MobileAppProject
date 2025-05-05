@@ -34,7 +34,7 @@
 
         <!-- Deck of deeds -->
         <activity
-            android:name=".ui.DeckActivity"
+            android:name=".ui.SettingsActivity"
             android:exported="false" />
 
         <!-- History / completed deeds -->

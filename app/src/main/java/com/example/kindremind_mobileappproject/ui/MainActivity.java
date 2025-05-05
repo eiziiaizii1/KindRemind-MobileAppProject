@@ -20,7 +20,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 
 import com.example.kindremind_mobileappproject.R;
-import com.example.kindremind_mobileappproject.data.DeedApiManager;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
@@ -100,21 +99,21 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         // wait until api call ends
         dataManager.whenReady(() -> {
 
-                // Load today's deed - check if we have a saved deed ID first (from instance state)
-        if (savedInstanceState != null && savedInstanceState.containsKey(KEY_CURRENT_DEED_ID)) {
-            int savedDeedId = savedInstanceState.getInt(KEY_CURRENT_DEED_ID);
-            loadSpecificDeed(savedDeedId);
-        } else {
-            // Check if we have a saved deed ID in SharedPreferences (for navigation returns)
-            int savedDeedId = sharedPreferences.getInt(PREF_CURRENT_DEED_ID, -1);
-            if (savedDeedId != -1) {
+            // Load today's deed - check if we have a saved deed ID first (from instance state)
+            if (savedInstanceState != null && savedInstanceState.containsKey(KEY_CURRENT_DEED_ID)) {
+                int savedDeedId = savedInstanceState.getInt(KEY_CURRENT_DEED_ID);
                 loadSpecificDeed(savedDeedId);
             } else {
-                loadTodaysDeed();
+                // Check if we have a saved deed ID in SharedPreferences (for navigation returns)
+                int savedDeedId = sharedPreferences.getInt(PREF_CURRENT_DEED_ID, -1);
+                if (savedDeedId != -1) {
+                    loadSpecificDeed(savedDeedId);
+                } else {
+                    loadTodaysDeed();
+                }
             }
-        }
 
-    });
+        });
         // Get vibrator service
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
@@ -223,8 +222,8 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
                     startActivity(new Intent(MainActivity.this, HistoryActivity.class));
                     return true;
                 } else if (itemId == R.id.nav_deck) {
-                    // Navigate to deck activity
-                    startActivity(new Intent(MainActivity.this, DeckActivity.class));
+                    // Navigate to settings activity (former deck activity)
+                    startActivity(new Intent(MainActivity.this, SettingsActivity.class));
                     return true;
                 }
 
@@ -264,30 +263,6 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
             loadTodaysDeed();
         }
     }
-
-    /**
-     * Get a random deed from the DeedDataManager
-     */
-    /*private Deed getRandomDeedFromDataManager() {
-        // In a real implementation, you might want to get a deed based on some criteria
-        // For now, we'll get a random deed from the data manager's map
-        if (dataManager != null) {
-            // Get a random deed ID between 1 and 16 (based on your current setup)
-            Random random = new Random();
-            int randomDeedId = random.nextInt(dataManager.getDeedCount()) + 1;
-
-            // Try to get the deed with that ID
-            Deed deed = dataManager.getDeedById(randomDeedId);
-
-            // If we got a valid deed, return it
-            if (deed != null) {
-                return deed;
-            }
-        }
-
-        // If we couldn't get a valid deed, return null and let the caller handle it
-        return null;
-    } */
 
     private Deed getRandomDeedFromDataManager(){
         if (dataManager != null) {
@@ -360,8 +335,10 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void completeDeed() {
-        // Vibrate as feedback
-        vibrateForCompletion();
+        // Vibrate as feedback - check user preference first
+        if (isVibrationEnabled()) {
+            vibrateForCompletion();
+        }
 
         // Make sure coin is visible and reset its properties before animation
         coinAnimation.setAlpha(1.0f);
@@ -378,6 +355,14 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
         // Show completion message
         Toast.makeText(this, R.string.deed_completed, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Check if vibration is enabled in SharedPreferences
+     */
+    private boolean isVibrationEnabled() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        return prefs.getBoolean(SettingsActivity.PREF_VIBRATION_ENABLED, true); // Default to true
     }
 
     private void loadNextDeed() {

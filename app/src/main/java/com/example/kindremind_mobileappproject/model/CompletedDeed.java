@@ -1,14 +1,6 @@
 package com.example.kindremind_mobileappproject.model;
-import androidx.room.Entity;
-import androidx.room.ForeignKey;
-import androidx.room.PrimaryKey;
-
-/**
- * Entity class representing a completed deed
- */
-@Entity(tableName = "deed_log")
 public class CompletedDeed {
-    @PrimaryKey(autoGenerate = true)
+
     private int pk;
     private int deedId;
     private boolean custom;
@@ -41,6 +33,15 @@ public class CompletedDeed {
 
     public boolean isCustom() {
         return custom;
+    }
+
+    // sqlite database only hold 0 / 1 for booleans
+    public int getCustomIntValue(){
+        if (this.custom)
+            return 1;
+        else
+            return 0;
+
     }
 
     public void setCustom(boolean custom) {

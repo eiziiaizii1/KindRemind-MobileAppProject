@@ -1,11 +1,14 @@
 package com.example.kindremind_mobileappproject.data;
 
+import android.content.Context;
+import android.database.Cursor;
 import android.os.Handler;
 import android.os.Looper;
 
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
 import com.example.kindremind_mobileappproject.ui.adapters.CompletedDeedWithDetails;
+import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,26 +27,29 @@ public class DeedDataManager {
 
     // In-memory storage for deeds
     private final Map<Integer, Deed> deedMap;
-    private final List<CompletedDeed> completedDeeds;
+    //private final List<CompletedDeed> completedDeeds;
 
     // Sample deed texts by category for resolving deed details
     private final Map<String, List<String>> deedTextsByCategory;
     private Runnable readyCallback;
 
-    private DeedDataManager() {
+    private DBAdapter dbAdapter;
+
+    private DeedDataManager(Context context) {
         deedMap = new HashMap<>();
-        completedDeeds = new ArrayList<>();
+        //completedDeeds = new ArrayList<>();
         deedTextsByCategory = new HashMap<>();
         apiManager = DeedApiManager.getInstance();
+        dbAdapter = DBAdapter.getInstance(context);
 
         // Initialize with some default deeds
         //initializeDefaultDeeds();
         initializeDeedsFromApi();
     }
 
-    public static synchronized DeedDataManager getInstance() {
+    public static synchronized DeedDataManager getInstance(Context context) {
         if (instance == null) {
-            instance = new DeedDataManager();
+            instance = new DeedDataManager(context);
         }
         return instance;
     }
@@ -126,14 +132,20 @@ public class DeedDataManager {
     /**
      * Save a completed deed to in-memory storage
      */
+
+    /*
     public void saveCompletedDeed(CompletedDeed completedDeed) {
         completedDeeds.add(completedDeed);
+    }
+    */
+    public void saveCompletedDeed(CompletedDeed completedDeed){
+        dbAdapter.insertCompletedDeed(completedDeed.getDeedId(), completedDeed.getCustomIntValue(),completedDeed.getDate(),completedDeed.getNote());
     }
 
     /**
      * Get all completed deeds with their details
      */
-    public List<CompletedDeedWithDetails> getCompletedDeedsWithDetails() {
+    /*public List<CompletedDeedWithDetails> getCompletedDeedsWithDetails() {
         List<CompletedDeedWithDetails> result = new ArrayList<>();
 
         for (CompletedDeed completedDeed : completedDeeds) {
@@ -165,12 +177,58 @@ public class DeedDataManager {
         }
 
         return result;
+    } */
+
+    public List<CompletedDeedWithDetails> getCompletedDeedsWithDetails(){
+
+        List<CompletedDeedWithDetails> result = new ArrayList<>();
+
+        Cursor c = dbAdapter.getAllCompletedDeeds();
+
+        if (c != null && c.moveToFirst()){
+
+            int completedDeedCount = c.getCount();
+
+            for (int i = 0;i<completedDeedCount;i++){
+                // Find the associated deed
+                Deed deed = deedMap.get(c.getInt(1));
+
+                String deedText;
+                String category;
+
+                if (deed != null) {
+                    deedText = deed.getText();
+                    category = deed.getCat();
+                } else {
+                    // If deed not found, provide defaults (could happen with custom deeds)
+                    deedText = "Custom deed";
+                    category = "other";
+                }
+
+                boolean custom = false;
+                if (c.getInt(2) == 1)
+                    custom = true;
+
+                CompletedDeedWithDetails item = new CompletedDeedWithDetails(
+                        c.getInt(0),
+                        deedText,
+                        category,
+                        c.getString(3),
+                        c.getString(4),
+                        custom
+                );
+
+                result.add(item);
+                c.moveToNext();
+            }
+        }
+        return result;
     }
 
     /**
      * Add sample completed deeds for testing
      */
-    public void addSampleCompletedDeeds() {
+   /* public void addSampleCompletedDeeds() {
         // Only add samples if the list is empty
 //        if (completedDeeds.isEmpty()) {
 //            CompletedDeed deed1 = new CompletedDeed(1, false, "2025-05-01", null);
@@ -185,7 +243,7 @@ public class DeedDataManager {
 //            completedDeeds.add(deed3);
 //        }
     }
-
+*/
     /**
      * Get a deed by ID
      */

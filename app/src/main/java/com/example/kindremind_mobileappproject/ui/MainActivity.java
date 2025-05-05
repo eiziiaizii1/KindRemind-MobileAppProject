@@ -23,6 +23,7 @@ import com.example.kindremind_mobileappproject.data.DeedApiManager;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.model.CompletedDeed;
 import com.example.kindremind_mobileappproject.model.Deed;
+import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 import com.example.kindremind_mobileappproject.ui.utils.AnimationUtils;
 import com.example.kindremind_mobileappproject.ui.utils.SwipeGestureDetector;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
@@ -67,14 +68,18 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     private static final String PREFS_NAME = "KindRemindPrefs";
     private static final String PREF_CURRENT_DEED_ID = "current_deed_id";
     private SharedPreferences sharedPreferences;
+    private DBAdapter dbAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Initialize data and manager
-        dataManager = DeedDataManager.getInstance();
+        // Initialize and open the database
+        dbAdapter = DBAdapter.getInstance(this);
+
+        // Initialize data manager
+        dataManager = DeedDataManager.getInstance(this);
 
         // Initialize SharedPreferences
         sharedPreferences = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -93,32 +98,28 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
         // wait until api call ends
         dataManager.whenReady(() -> {
-            Toast.makeText(MainActivity.this,"1",Toast.LENGTH_SHORT).show();
+
                 // Load today's deed - check if we have a saved deed ID first (from instance state)
         if (savedInstanceState != null && savedInstanceState.containsKey(KEY_CURRENT_DEED_ID)) {
             int savedDeedId = savedInstanceState.getInt(KEY_CURRENT_DEED_ID);
-            Toast.makeText(MainActivity.this,"1.1.1",Toast.LENGTH_SHORT).show();
             loadSpecificDeed(savedDeedId);
-            Toast.makeText(MainActivity.this,"1.1.2",Toast.LENGTH_SHORT).show();
         } else {
             // Check if we have a saved deed ID in SharedPreferences (for navigation returns)
             int savedDeedId = sharedPreferences.getInt(PREF_CURRENT_DEED_ID, -1);
             if (savedDeedId != -1) {
-                Toast.makeText(MainActivity.this,"1.2.1",Toast.LENGTH_SHORT).show();
                 loadSpecificDeed(savedDeedId);
-                Toast.makeText(MainActivity.this,"1.2.2",Toast.LENGTH_SHORT).show();
             } else {
                 loadTodaysDeed();
-                Toast.makeText(MainActivity.this,"1.3",Toast.LENGTH_SHORT).show();
             }
         }
-            Toast.makeText(MainActivity.this,"2",Toast.LENGTH_SHORT).show();
+
     });
         // Get vibrator service
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
 
         // Make sure coin animation is initially invisible
         coinAnimation.setVisibility(View.INVISIBLE);
+
     }
 
     @Override
@@ -404,9 +405,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         );
 
         // Generate a primary key (this would be handled by Room in the database implementation)
-        completedDeed.setPk(dataManager.getCompletedDeedsWithDetails().size() + 1);
+        //completedDeed.setPk(dataManager.getCompletedDeedsWithDetails().size() + 1); // idk what this is
 
-        // Save to our data manager
+        // Save to our database
         dataManager.saveCompletedDeed(completedDeed);
     }
 

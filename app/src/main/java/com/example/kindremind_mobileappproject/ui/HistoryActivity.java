@@ -13,6 +13,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.kindremind_mobileappproject.R;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.ui.adapters.CompletedDeedWithDetails;
+import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 import com.example.kindremind_mobileappproject.ui.adapters.HistoryAdapter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -35,10 +36,10 @@ public class HistoryActivity extends AppCompatActivity {
         setContentView(R.layout.activity_history);
 
         // Initialize data manager
-        dataManager = DeedDataManager.getInstance();
+        dataManager = DeedDataManager.getInstance(this);
 
         // Add sample data for testing (remove this in production)
-        dataManager.addSampleCompletedDeeds();
+        //dataManager.addSampleCompletedDeeds();
 
         // Find views
         bottomNavigation = findViewById(R.id.bottom_navigation);

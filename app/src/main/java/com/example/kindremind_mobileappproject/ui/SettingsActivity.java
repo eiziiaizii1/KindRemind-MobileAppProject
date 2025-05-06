@@ -13,6 +13,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.kindremind_mobileappproject.R;
+import com.example.kindremind_mobileappproject.ui.utils.NotificationScheduler;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
 /**
@@ -95,6 +96,11 @@ public class SettingsActivity extends AppCompatActivity {
             SharedPreferences.Editor editor = sharedPreferences.edit();
             editor.putBoolean(PREF_VIBRATION_ENABLED, isChecked);
             editor.apply();
+
+            if (isChecked)
+                NotificationScheduler.schedule(SettingsActivity.this);
+            else
+                NotificationScheduler.cancel(SettingsActivity.this);
 
             // Show a confirmation toast
             String message = isChecked ? "Vibration enabled" : "Vibration disabled";

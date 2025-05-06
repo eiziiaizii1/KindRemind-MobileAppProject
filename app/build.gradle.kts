@@ -43,6 +43,8 @@ dependencies {
     implementation(libs.converter.gson)
     implementation(libs.gson)
     testImplementation(libs.junit)
+    implementation(libs.work.runtime)
+    implementation(libs.core.ktx)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 }

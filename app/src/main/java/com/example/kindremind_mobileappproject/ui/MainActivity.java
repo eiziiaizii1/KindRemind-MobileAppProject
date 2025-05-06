@@ -70,6 +70,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     private SharedPreferences sharedPreferences;
     private DBAdapter dbAdapter;
 
+    // Flag to prevent multiple completions/skips while animations are playing
+    private boolean isAnimating = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -119,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
         // Make sure coin animation is initially invisible
         coinAnimation.setVisibility(View.INVISIBLE);
-
     }
 
     @Override
@@ -157,6 +159,11 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         deedCard.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                // Ignore touch events if we're currently animating
+                if (isAnimating) {
+                    return true;
+                }
+
                 float screenWidth = getResources().getDisplayMetrics().widthPixels;
 
                 switch (event.getAction()) {
@@ -181,10 +188,16 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
                         if (translationX > threshold) {
                             // Swipe right - complete deed
-                            AnimationUtils.animateSwipeRight(v, () -> completeDeed());
+                            isAnimating = true;
+                            AnimationUtils.animateSwipeRight(v, () -> {
+                                completeDeedAction();
+                            });
                         } else if (translationX < -threshold) {
                             // Swipe left - skip deed
-                            AnimationUtils.animateSwipeLeft(v, () -> skipDeed());
+                            isAnimating = true;
+                            AnimationUtils.animateSwipeLeft(v, () -> {
+                                skipDeedAction();
+                            });
                         } else {
                             // Return to original position
                             AnimationUtils.animateCardReturn(v, translationX);
@@ -196,15 +209,31 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         });
     }
 
-    private void setupClickListeners() { // deactivate these buttons after clicking them until new card shows up
+    private void setupClickListeners() {
         btnComplete.setOnClickListener(v -> {
+            // Ignore if already animating
+            if (isAnimating) return;
+
+            // Set the flag to prevent multiple animations
+            isAnimating = true;
+
             // Animate the card on button press
-            AnimationUtils.animateSwipeRight(deedCard, () -> completeDeed());
+            AnimationUtils.animateSwipeRight(deedCard, () -> {
+                completeDeedAction();
+            });
         });
 
         btnSkip.setOnClickListener(v -> {
+            // Ignore if already animating
+            if (isAnimating) return;
+
+            // Set the flag to prevent multiple animations
+            isAnimating = true;
+
             // Animate the card on button press
-            AnimationUtils.animateSwipeLeft(deedCard, () -> skipDeed());
+            AnimationUtils.animateSwipeLeft(deedCard, () -> {
+                skipDeedAction();
+            });
         });
     }
 
@@ -312,6 +341,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void updateDeedUI() {
+        // Reset the animation flag when updating UI for a new deed
+        isAnimating = false;
+
         if (currentDeed != null) {
             deedText.setText(currentDeed.getText());
 
@@ -342,6 +374,16 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void completeDeed() {
+        // This method now just triggers the animation and sets the flag
+        isAnimating = true;
+        AnimationUtils.animateSwipeRight(deedCard, () -> {
+            completeDeedAction();
+        });
+    }
+
+    private void completeDeedAction() {
+        // This method handles the actual completion logic after the animation
+
         // Vibrate as feedback - check user preference first
         if (isVibrationEnabled()) {
             vibrateForCompletion();
@@ -353,12 +395,12 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
         // Show enhanced coin animation
         AnimationUtils.playCoinAnimation(coinAnimation, () -> {
+            // Save completed deed to database
+            saveDeedCompletion();
+
             // Load the next deed after animation completes
             loadNextDeed();
         });
-
-        // Save completed deed to database
-        saveDeedCompletion();
 
         // Show completion message
         Toast.makeText(this, R.string.deed_completed, Toast.LENGTH_SHORT).show();
@@ -406,6 +448,16 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
     }
 
     private void skipDeed() {
+        // This method now just triggers the animation and sets the flag
+        isAnimating = true;
+        AnimationUtils.animateSwipeLeft(deedCard, () -> {
+            skipDeedAction();
+        });
+    }
+
+    private void skipDeedAction() {
+        // This method handles the actual skip logic after the animation
+
         if (skipsRemaining > 0) {
             skipsRemaining--;
 
@@ -418,6 +470,9 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         } else {
             // No more skips available
             Toast.makeText(this, R.string.max_skips_reached, Toast.LENGTH_SHORT).show();
+
+            // Reset the animation flag since we're not moving to a new card
+            isAnimating = false;
 
             // Return card to original position
             AnimationUtils.animateCardReturn(deedCard, deedCard.getTranslationX());
@@ -436,9 +491,6 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
                 currentDate,
                 null                  // No note for now
         );
-
-        // Generate a primary key (this would be handled by Room in the database implementation)
-        //completedDeed.setPk(dataManager.getCompletedDeedsWithDetails().size() + 1); // idk what this is
 
         // Save to our database
         dataManager.saveCompletedDeed(completedDeed);

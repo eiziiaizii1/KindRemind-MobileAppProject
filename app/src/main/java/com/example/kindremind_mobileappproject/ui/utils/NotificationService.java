@@ -25,7 +25,7 @@ public class NotificationService extends Service {
                 .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .build();
 
-        NotificationManager manager = getSystemService(NotificationManager.class);
+         NotificationManager manager = getSystemService(NotificationManager.class);
         if (manager != null) {
             manager.notify(1, notification);
         }

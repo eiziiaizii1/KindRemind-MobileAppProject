@@ -48,7 +48,8 @@
             android:name=".ui.AddDeedActivity"
             android:exported="false" />
         <service android:name=".ui.utils.NotificationService"
-            android:exported="false" />
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"/>
 
     </application>
 

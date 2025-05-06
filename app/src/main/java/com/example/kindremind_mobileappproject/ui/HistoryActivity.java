@@ -15,6 +15,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.kindremind_mobileappproject.R;
 import com.example.kindremind_mobileappproject.data.DeedDataManager;
 import com.example.kindremind_mobileappproject.ui.adapters.CompletedDeedWithDetails;
+import com.example.kindremind_mobileappproject.ui.adapters.DBAdapter;
 import com.example.kindremind_mobileappproject.ui.adapters.HistoryAdapter;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 
@@ -121,6 +122,9 @@ public class HistoryActivity extends AppCompatActivity {
                 emptyStateText.setVisibility(View.VISIBLE);
                 historyListView.setVisibility(View.GONE);
             }
+
+            DBAdapter dbAdapter = DBAdapter.getInstance(this);
+            dbAdapter.deleteDeeds();
 
             // Show a toast message
             Toast.makeText(this, "History cleared", Toast.LENGTH_SHORT).show();

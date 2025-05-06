@@ -196,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
         });
     }
 
-    private void setupClickListeners() {
+    private void setupClickListeners() { // deactivate these buttons after clicking them until new card shows up
         btnComplete.setOnClickListener(v -> {
             // Animate the card on button press
             AnimationUtils.animateSwipeRight(deedCard, () -> completeDeed());
@@ -266,7 +266,13 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
 
     private Deed getRandomDeedFromDataManager(){
         if (dataManager != null) {
-            // Get a random deed ID between 1 and 16 (based on your current setup)
+
+            int deedCount = dbAdapter.getAllCompletedDeeds().getCount();
+
+            if (deedCount >= 50) {
+                Toast.makeText(this,"Congratulations! You completed all the deeds.",Toast.LENGTH_LONG).show();
+                dbAdapter.deleteDeeds();
+            }
             Random random = new Random();
             int randomDeedId = random.nextInt(dataManager.getDeedCount()) + 1;
 
@@ -299,6 +305,7 @@ public class MainActivity extends AppCompatActivity implements SwipeGestureDetec
                 isComplete = true;
                 break;
             }
+            c.moveToNext();
         }
 
         return isComplete;
